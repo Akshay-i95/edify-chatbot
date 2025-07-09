@@ -27,15 +27,29 @@ A large-scale, role-based chatbot system for Edify Schools. Teachers, students, 
 
 ## 🏗️ System Architecture
 
-```mermaid
-graph TD
-    A[Azure Blob Storage] --> B[Downloader]
-    B --> C[Document Parser & Chunker]
-    C --> D[Metadata Tagger]
-    D --> E[Embedding Generator]
-    E --> F[Vector DB (Qdrant/Pinecone)]
-    F --> G[Chatbot API]
-    G --> H[Edify Portal]
+```
+Azure Blob Storage
+      │
+      ▼
+Downloader
+      │
+      ▼
+Document Parser & Chunker
+      │
+      ▼
+Metadata Tagger
+      │
+      ▼
+Embedding Generator
+      │
+      ▼
+Vector DB (Qdrant/Pinecone)
+      │
+      ▼
+Chatbot API
+      │
+      ▼
+Edify Portal
 ```
 
 ---
