@@ -1,3 +1,7 @@
+# Edify Azure Ingestion & Chatbot Pipeline
+
+This project provides a modular pipeline for downloading, parsing, and embedding academic content from Azure Blob Storage, supporting a role-based chatbot for Edify Schools.
+
 # 🚀 Edify School Chatbot Project
 
 ![Edify Logo](https://dummyimage.com/200x60/ededed/333333&text=Edify+Chatbot) <!-- Replace with actual logo if available -->
@@ -139,7 +143,7 @@ Edify’s portal handles all user authentication and role mapping.
 ## 👥 Contacts
 | Role         | Name/Contact         |
 |--------------|---------------------|
-| Developer    | Akshay (G1 Footage) |
+| Developer    | Akshay (i95) |
 | Client Side  | Sampath (Edify)     |
 
 ---

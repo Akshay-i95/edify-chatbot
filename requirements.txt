@@ -1,0 +1,6 @@
+# Add your dependencies here, e.g.:
+# azure-storage-blob
+# unstructured
+# sentence-transformers
+# qdrant-client
+# fastapi
