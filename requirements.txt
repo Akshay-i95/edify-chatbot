@@ -1,6 +1,8 @@
-# Add your dependencies here, e.g.:
-# azure-storage-blob
-# unstructured
-# sentence-transformers
-# qdrant-client
-# fastapi
+azure-storage-blob
+unstructured[pdf,docx,images]
+sentence-transformers
+qdrant-client
+python-dotenv
+pdfminer.six
+pi-heif
+unstructured-inference

@@ -31,19 +31,16 @@ A large-scale, role-based chatbot system for Edify Schools. Teachers, students, 
 Azure Blob Storage
       │
       ▼
-Downloader
+Streamer (stream.py)
       │
       ▼
-Document Parser & Chunker
+Document Parser & Chunker (parse.py)
       │
       ▼
-Metadata Tagger
+Embedding Generator (embed.py)
       │
       ▼
-Embedding Generator
-      │
-      ▼
-Vector DB (Qdrant/Pinecone)
+Vector DB (Qdrant)
       │
       ▼
 Chatbot API
@@ -52,25 +49,6 @@ Chatbot API
 Edify Portal
 ```
 
----
-
-## 🔄 Data Flow
-
-```
-[Azure Blob]
-    ↓
-[Download]
-    ↓
-[Parse & Chunk]
-    ↓
-[Attach Metadata]
-    ↓
-[Generate Embeddings]
-    ↓
-[Store in Vector DB]
-    ↓
-[Query with Role-Based Filters]
-```
 
 - **Source:** Azure Blob Storage
 - **Structure:**
@@ -162,8 +140,145 @@ Edify’s portal handles all user authentication and role mapping.
 
 ---
 
-> **Note:**
-> This README will evolve with API endpoints, role-based examples, and test cases in the next phase.
+# Edify Chatbot Production-Ready Pipeline
+
+This README is a condensed, actionable guide for building and operating a streaming, role-based academic chatbot at scale. For full details, see `PRODUCTION_GUIDE.md`.
+
+---
+
+## 📋 Table of Contents
+1. [Project Vision](#project-vision)
+2. [Production Architecture](#production-architecture)
+3. [Step-by-Step Implementation](#step-by-step-implementation)
+4. [Key Components](#key-components)
+5. [Deployment & Operations](#deployment--operations)
+6. [KPIs & Success](#kpis--success)
+7. [Support](#support)
+
+---
+
+## 🎯 Project Vision
+- **Goal:** Stream and process 600-700GB of academic content from Azure Blob Storage with ZERO local storage, supporting sub-2s, role-based queries for Edify Schools.
+- **Users:** Teachers, students, admin staff (role-based access)
+- **Performance:** <2s query response, 99.9% uptime
+- **Approach:** Streaming pipeline (Azure → Memory → Vector DB)
+
+---
+
+## 🏗️ Production Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                   STREAMING PIPELINE ARCHITECTURE               │
+├─────────────────────────────────────────────────────────────────┤
+│  Azure Blob Storage (600-700GB)                                │
+│           ↓ (Stream - No Download)                             │
+│  Memory Buffer (50-200MB max)                                  │
+│           ↓                                                   │
+│  Unstructured.io Parser                                        │
+│           ↓                                                   │
+│  Text Chunking & Metadata Extraction                           │
+│           ↓                                                   │
+│  Embedding Generation (Batched)                                │
+│           ↓                                                   │
+│  Qdrant Vector Store                                           │
+│           ↓                                                   │
+│  Clear Memory & Process Next File                              │
+├─────────────────────────────────────────────────────────────────┤
+│                     QUERY ARCHITECTURE                         │
+├─────────────────────────────────────────────────────────────────┤
+│  Edify Portal → FastAPI Backend → Redis Cache → Qdrant Vector  │
+│  Search + Role Filtering → Response + Cache Update             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🚦 Step-by-Step Implementation
+
+### 1. Environment & Prerequisites
+- Python 3.10+, Docker Desktop, Git, VS Code
+- Install dependencies: `azure-storage-blob`, `qdrant-client`, `unstructured[pdf]`, `sentence-transformers`, `fastapi`, `uvicorn[standard]`, `redis`, `python-dotenv`, `psutil`, `httpx`
+- Start Qdrant: `docker run -d -p 6333:6333 -v qdrant_storage:/qdrant/storage qdrant/qdrant:latest`
+- Create `.env` with Azure and Qdrant config
+
+### 2. Project Structure
+```
+project/
+├── src/
+│   ├── ingestion/
+│   │   ├── azure_streamer.py
+│   │   ├── document_processor.py
+│   │   ├── embedding_generator.py
+│   │   └── vector_store.py
+│   ├── api/
+│   │   └── query_api.py
+│   └── utils/
+├── test_streaming.py
+├── test_api.py
+├── test_integration.py
+├── logs/
+├── .env
+├── requirements.txt
+└── README.md
+```
+
+### 3. Streaming Pipeline
+- **AzureBlobStreamer:** Streams files from Azure to memory, extracts metadata
+- **DocumentProcessor:** Parses PDFs in memory, chunks text, attaches metadata
+- **EmbeddingGenerator:** Generates vector embeddings in batches
+- **VectorStoreManager:** Stores/searches vectors in Qdrant, role-based filtering
+- **StreamingPipeline:** Orchestrates end-to-end streaming, embedding, and storage
+
+### 4. FastAPI Backend
+- `/query`: Role-based search endpoint (with Redis caching)
+- `/health`: Health check
+- `/stats`: System stats
+
+---
+
+## 🧩 Key Components
+- **Streaming (No Local Storage):** All processing in memory, no temp files
+- **Role-Based Filtering:** Secure, metadata-driven access for students, teachers, admins
+- **Batch Processing:** Efficient embedding and vector storage
+- **Caching:** Redis for sub-second repeat queries
+- **Monitoring:** Logs, stats endpoints, and alerting
+
+---
+
+## 🚀 Deployment & Operations
+- **Containerization:** Use Docker Compose for API, Qdrant, Redis
+- **Cloud:** Deploy on Azure Container Instances or Kubernetes
+- **Scaling:** Multi-instance FastAPI, auto-scaling, resource monitoring
+- **Backup:** Daily Qdrant snapshots, config backup, disaster recovery plan
+- **Security:** API key/JWT auth, role-based access, encryption, compliance
+- **Maintenance:** Daily health checks, weekly ingestion, monthly reviews
+
+---
+
+## 📈 KPIs & Success
+| Metric                | Target         |
+|-----------------------|---------------|
+| Query Response Time   | <2 seconds    |
+| System Uptime         | >99.9%        |
+| Error Rate            | <1%           |
+| Processing Speed      | 100+ files/hr |
+| User Adoption         | 80% teachers  |
+| Query Satisfaction    | >4.0/5.0      |
+
+---
+
+## 🆘 Support & Escalation
+| Level | Response Time | Issues                        |
+|-------|---------------|-------------------------------|
+| L1    | 15 min        | User questions, troubleshooting|
+| L2    | 1 hour        | Technical/config issues        |
+| L3    | 4 hours       | System failures, data issues   |
+| L4    | 24 hours      | Major upgrades, architecture   |
+
+---
+
+> For full production details, troubleshooting, and code samples, see `PRODUCTION_GUIDE.md`.
 
 
 
